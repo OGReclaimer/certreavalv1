@@ -1,38 +1,41 @@
 //React Dependancies
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { 
-    BrowserRouter as Router, 
-    Route,
-    Switch
-} from 'react-router-dom';
+import { Router } from 'react-router-dom';
+import history from './history';
 
 //Redux Dependancies
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
-//Components
-import AppCert from './components/App_Cert';
-import AppNew from './components/App_New'
-import Home from './components/Home';
+import thunk from 'redux-thunk';
 import reducers from './reducers';
-
+//Components
+import App from './components/App';
 //Style Sheets
 import './style/style.css';
 
 //Other
 import registerServiceWorker from './registerServiceWorker';
 
-const createStoreWithMiddleware = applyMiddleware()(createStore);
+//Returning user
+import { authListening } from './actions';
+const initialState =  {
+    auth: {currently: "User unauthenticated", authenticated: false, uid: null}
+};
+
+const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
+const store = createStoreWithMiddleware(reducers, initialState);
 
 ReactDOM.render(
-    <Provider store={createStoreWithMiddleware(reducers)}>
-        <Router>
-            <Switch>
-                <Route exact path="/" component={Home} />
-                <Route path="/dashboard/new" component={AppNew} />
-                <Route path="/dashboard" component={AppCert} />
-            </Switch>
+    <Provider store={store}>
+        <Router history={history}>
+            <App />
         </Router>
     </Provider>
     , document.getElementById('root'));
 registerServiceWorker();
+
+//Authentication Intialisation
+setTimeout(() => {
+    store.dispatch( authListening() )
+});
